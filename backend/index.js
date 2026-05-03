@@ -11,13 +11,12 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://team-task-manager-henna.vercel.app"
-  ],
-  credentials: true
-}));
+// 🔥 CORS FIX
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 app.use(express.json());
 

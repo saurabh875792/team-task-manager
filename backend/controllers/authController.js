@@ -10,11 +10,13 @@ const generateToken = (id, role) => {
 
 export const signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    let { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ msg: "All fields are required" });
     }
+
+    email = email.toLowerCase(); // 🔥 FIX
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -46,11 +48,13 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ msg: "All fields are required" });
     }
+
+    email = email.toLowerCase(); // 🔥 FIX
 
     const user = await User.findOne({ email });
     if (!user) {
