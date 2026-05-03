@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api"
+  baseURL: "https://team-task-manager-production-b8cd.up.railway.app/api"
 });
 
 // request interceptor → token attach karega
@@ -10,9 +10,7 @@ API.interceptors.request.use(
     const token = localStorage.getItem("token");
 
     if (token) {
-      config.headers.Authorization = token;
-      // agar backend me Bearer chahiye ho:
-      // config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`; // 🔥 FIXED
     }
 
     return config;
@@ -20,15 +18,15 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// response interceptor (optional)
+// response interceptor
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error("API Error:", error.response?.data || error.message);
 
-    // unauthorized handle (auto logout type)
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
+      localStorage.removeItem("user"); // 🔥 extra cleanup
       window.location.href = "/login";
     }
 
