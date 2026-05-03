@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Loader from "../components/Loader";
+import API from "../services/api";
 import {
   getProjects,
   createProject,
@@ -8,6 +9,8 @@ import {
 
 const ProjectPage = () => {
   const [projects, setProjects] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState({});
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
@@ -25,8 +28,18 @@ const ProjectPage = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const res = await API.get("/auth/users");
+      setUsers(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
+    fetchUsers();
   }, []);
 
   const handleCreate = async (e) => {
@@ -43,7 +56,6 @@ const ProjectPage = () => {
     }
   };
 
-  // 🔥 DELETE FUNCTION
   const handleDelete = async (id) => {
     try {
       await deleteProject(id);
@@ -51,6 +63,33 @@ const ProjectPage = () => {
     } catch (error) {
       console.error(error);
       alert("Failed to delete project ❌");
+    }
+  };
+
+  const handleAddMember = async (projectId) => {
+    const userId = selectedUsers[projectId];
+
+    if (!userId) {
+      return alert("Select a user first");
+    }
+
+    try {
+      await API.post("/projects/add-member", {
+        projectId,
+        userId,
+      });
+
+      alert("Member added ✅");
+
+      setSelectedUsers({
+        ...selectedUsers,
+        [projectId]: "",
+      });
+
+      fetchProjects();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add member ❌");
     }
   };
 
@@ -63,7 +102,6 @@ const ProjectPage = () => {
         Projects
       </h1>
 
-      {/* Create Project */}
       {user?.role === "admin" && (
         <form
           onSubmit={handleCreate}
@@ -79,26 +117,25 @@ const ProjectPage = () => {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border p-2 rounded-lg"
           />
 
           <textarea
             placeholder="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border p-2 rounded-lg"
           />
 
           <button
             type="submit"
-            className="bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
+            className="bg-blue-500 text-white py-2 rounded-lg"
           >
             Create
           </button>
         </form>
       )}
 
-      {/* Project List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
         {projects.map((project) => (
@@ -118,14 +155,45 @@ const ProjectPage = () => {
               Members: {project.members?.length || 0}
             </p>
 
-            {/* 🔥 Delete Button (Admin only) */}
+            {/* 🔥 show member names */}
+            <div className="text-xs text-gray-500">
+              {project.members?.map((m) => m.name).join(", ")}
+            </div>
+
             {user?.role === "admin" && (
-              <button
-                onClick={() => handleDelete(project._id)}
-                className="mt-2 bg-red-500 text-white py-1 rounded-lg hover:bg-red-600"
-              >
-                Delete
-              </button>
+              <>
+                <select
+                  value={selectedUsers[project._id] || ""}
+                  onChange={(e) =>
+                    setSelectedUsers({
+                      ...selectedUsers,
+                      [project._id]: e.target.value,
+                    })
+                  }
+                  className="border p-1 rounded"
+                >
+                  <option value="">Select User</option>
+                  {users.map((u) => (
+                    <option key={u._id} value={u._id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => handleAddMember(project._id)}
+                  className="bg-green-500 text-white py-1 rounded"
+                >
+                  Add Member
+                </button>
+
+                <button
+                  onClick={() => handleDelete(project._id)}
+                  className="bg-red-500 text-white py-1 rounded"
+                >
+                  Delete
+                </button>
+              </>
             )}
           </div>
         ))}

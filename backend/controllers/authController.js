@@ -12,6 +12,10 @@ export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    if (!name || !email || !password) {
+      return res.status(400).json({ msg: "All fields are required" });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ msg: "User already exists" });
@@ -23,7 +27,7 @@ export const signup = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: "member"   // 🔥 force member
+      role: "member",
     });
 
     res.status(201).json({
@@ -43,6 +47,10 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ msg: "All fields are required" });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -65,5 +73,14 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ msg: "Login failed" });
+  }
+};
+
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("_id name email");
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ msg: "Failed to fetch users" });
   }
 };
