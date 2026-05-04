@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://team-task-manager-production-b8cd.up.railway.app/api"
+  baseURL: "https://noble-spirit-production-cb4d.up.railway.app/api"
 });
 
 // request interceptor → token attach karega
